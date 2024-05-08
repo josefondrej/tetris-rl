@@ -2,7 +2,6 @@ import equinox as eqx  # Correct import for Equinox
 import jax
 import jax.numpy as jnp
 import numpy as np
-from jax.nn import relu
 
 
 class Flatten(eqx.Module):
@@ -12,6 +11,15 @@ class Flatten(eqx.Module):
 
     def __call__(self, x: jnp.ndarray) -> jnp.ndarray:
         return jnp.reshape(x, (-1))
+
+
+class Relu(eqx.Module):
+    """
+    Rectified Linear Unit activation function.
+    """
+
+    def __call__(self, x: jnp.ndarray) -> jnp.ndarray:
+        return jnp.maximum(x, 0)
 
 
 class DeepQNetwork(eqx.Module):
@@ -35,6 +43,7 @@ class DeepQNetwork(eqx.Module):
                 padding="VALID",
                 key=key_conv_1
             ),
+            Relu(),
             eqx.nn.Conv2d(
                 in_channels=32,
                 out_channels=64,
@@ -43,6 +52,7 @@ class DeepQNetwork(eqx.Module):
                 padding="VALID",
                 key=key_conv_2
             ),
+            Relu(),
             eqx.nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
@@ -51,20 +61,23 @@ class DeepQNetwork(eqx.Module):
                 padding="VALID",
                 key=key_conv_3
             ),
+            Relu(),
             Flatten(),
             eqx.nn.Linear(
                 in_features=46592,
                 out_features=512,
                 key=key_fc
             ),
+            Relu(),
             eqx.nn.Linear(
                 in_features=512,
                 out_features=num_actions,
                 key=key_output
-            )
+            ),
+            Relu()
         ]
 
-    def __call__(self, state: np.ndarray) -> jnp.ndarray:
+    def __call__(self, state: jnp.ndarray) -> jnp.ndarray:
         """
         Forward pass of the DeepQNetwork.
 
@@ -74,12 +87,10 @@ class DeepQNetwork(eqx.Module):
         Returns:
             The Q-values for each action.
         """
-        x = jnp.array(state, dtype=jnp.float32) / 255.
+        x = state / 255.0
         x = np.transpose(x, (2, 0, 1))  # JAX expects channel-first format
         for layer in self.layers:
             x = layer(x)
-            if isinstance(layer, eqx.nn.Linear):
-                x = relu(x)
         return x
 
 
