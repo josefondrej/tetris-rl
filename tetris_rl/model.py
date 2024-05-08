@@ -77,6 +77,7 @@ class DeepQNetwork(eqx.Module):
             Relu()
         ]
 
+    @jax.jit
     def __call__(self, state: jnp.ndarray) -> jnp.ndarray:
         """
         Forward pass of the DeepQNetwork.
