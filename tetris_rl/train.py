@@ -17,8 +17,8 @@ class Batch:
     def __init__(self, batch_raw: list[tuple[jnp.ndarray, int, float, jnp.ndarray, bool]]):
         self._batch_raw = batch_raw
 
-    def _get_property_by_index(self, index: int) -> jnp.ndarray:
-        return jnp.array([batch_item[index] for batch_item in self._batch_raw])
+    def _get_property_by_index(self, index: int, type_: type) -> jnp.ndarray:
+        return jnp.array([batch_item[index] for batch_item in self._batch_raw], dtype=type_)
 
     @property
     def size(self) -> int:
@@ -26,23 +26,23 @@ class Batch:
 
     @property
     def state(self) -> jnp.ndarray:
-        return self._get_property_by_index(0)
+        return self._get_property_by_index(0, jnp.float32)
 
     @property
     def action(self) -> jnp.ndarray:
-        return self._get_property_by_index(1)
+        return self._get_property_by_index(1, jnp.int32)
 
     @property
     def reward(self) -> jnp.ndarray:
-        return self._get_property_by_index(2)
+        return self._get_property_by_index(2, jnp.float32)
 
     @property
     def next_state(self) -> jnp.ndarray:
-        return self._get_property_by_index(3)
+        return self._get_property_by_index(3, jnp.float32)
 
     @property
     def done(self) -> jnp.ndarray:
-        return self._get_property_by_index(4)
+        return self._get_property_by_index(4, jnp.bool)
 
 
 class ReplayMemory:
