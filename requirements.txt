@@ -1,0 +1,5 @@
+gym-tetris
+nes-py
+jax
+jaxlib
+equinox
