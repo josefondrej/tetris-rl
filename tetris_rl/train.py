@@ -15,34 +15,35 @@ from tetris_rl.model import DeepQNetwork
 
 class Batch:
     def __init__(self, batch_raw: list[tuple[jnp.ndarray, int, float, jnp.ndarray, bool]]):
-        self._batch_raw = batch_raw
-
-    def _get_property_by_index(self, index: int, type_: type) -> jnp.ndarray:
-        return jnp.array([batch_item[index] for batch_item in self._batch_raw], dtype=type_)
+        self._state = jnp.array([batch_item[0] for batch_item in batch_raw], dtype=jnp.float32)
+        self._action = jnp.array([batch_item[1] for batch_item in batch_raw], dtype=jnp.int32)
+        self._reward = jnp.array([batch_item[2] for batch_item in batch_raw], dtype=jnp.float32)
+        self._next_state = jnp.array([batch_item[3] for batch_item in batch_raw], dtype=jnp.float32)
+        self._done = jnp.array([batch_item[4] for batch_item in batch_raw], dtype=jnp.bool)
 
     @property
     def size(self) -> int:
-        return len(self._batch_raw)
+        return len(self._state)
 
     @property
     def state(self) -> jnp.ndarray:
-        return self._get_property_by_index(0, jnp.float32)
+        return self._state
 
     @property
     def action(self) -> jnp.ndarray:
-        return self._get_property_by_index(1, jnp.int32)
+        return self._action
 
     @property
     def reward(self) -> jnp.ndarray:
-        return self._get_property_by_index(2, jnp.float32)
+        return self._reward
 
     @property
     def next_state(self) -> jnp.ndarray:
-        return self._get_property_by_index(3, jnp.float32)
+        return self._next_state
 
     @property
     def done(self) -> jnp.ndarray:
-        return self._get_property_by_index(4, jnp.bool)
+        return self._done
 
 
 class ReplayMemory:
