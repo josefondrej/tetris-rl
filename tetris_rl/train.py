@@ -151,11 +151,11 @@ def train(
     target_model = deepcopy(model)
 
     done = True
-    loss_value = float("inf")
+    batch_loss_value = float("inf")
 
     for step_index in range(steps):
         if step_index % 10 == 0:
-            print(f'Step: {step_index}, Loss: {loss_value}')
+            print(f'Step: {step_index}, Loss: {batch_loss_value}')
 
         if done:
             state = environment.reset()
@@ -188,7 +188,7 @@ def train(
             done=batch.done,
             discount_factor=discount_factor
         )
-        loss_value = loss_fn(model, batch.state, batch.action, y)
+        batch_loss_value = loss_fn(model, batch.state, batch.action, y)
         grads = grad_loss_fn(model, batch.state, batch.action, y)
         model = jax.tree_util.tree_map(lambda m, g: m - learning_rate * g, model, grads)
 
