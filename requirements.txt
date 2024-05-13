@@ -3,3 +3,4 @@ nes-py
 jax
 jaxlib
 equinox
+tqdm

@@ -8,6 +8,7 @@ import jax
 import jax.numpy as jnp
 from equinox import Module
 from gym import Space
+from tqdm import tqdm
 
 from tetris_rl.environment import create_environment
 from tetris_rl.model import DeepQNetwork
@@ -154,9 +155,9 @@ def train(
     done = True
     batch_loss_value = float("inf")
 
-    for step_index in range(steps):
+    for step_index in tqdm(range(steps)):
         if step_index % 10 == 0:
-            print(f'Step: {step_index}, Loss: {batch_loss_value}')
+            tqdm.write(f"Step: {step_index}, Loss: {batch_loss_value}")
 
         if done:
             state = environment.reset()
