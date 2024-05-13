@@ -64,7 +64,7 @@ class DeepQNetwork(eqx.Module):
             Relu(),
             Flatten(),
             eqx.nn.Linear(
-                in_features=46592,
+                in_features=46592,  # TODO: Calculate this from the state_shape
                 out_features=512,
                 key=key_fc
             ),
