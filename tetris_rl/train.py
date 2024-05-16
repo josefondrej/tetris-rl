@@ -2,7 +2,6 @@ import functools
 import os
 import random
 from collections import deque
-from copy import deepcopy
 
 import equinox as eqx
 import jax
@@ -116,8 +115,8 @@ class DoubleQAgent:
         return eqx.combine(self._model_params, self._model_static)
 
     def _update_target(self) -> eqx.Module:
-        self._target_params = deepcopy(self._model_params)
-        self._target_static = deepcopy(self._model_static)
+        self._target_params = self._model_params
+        self._target_static = self._model_static
 
     def act(self, observation: np.ndarray) -> int:
         explore = random.random() < self._explore_probability
