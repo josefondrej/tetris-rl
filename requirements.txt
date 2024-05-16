@@ -4,3 +4,4 @@ jaxlib
 equinox
 tqdm
 opencv-python
+optax
