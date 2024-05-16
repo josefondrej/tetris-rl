@@ -1,21 +1,29 @@
-import gym
-import gym_tetris
-from gym_tetris.actions import SIMPLE_MOVEMENT
-from nes_py.wrappers import JoypadSpace
+import gymnasium
+from gymnasium.wrappers import GrayScaleObservation, TransformObservation
 
 
-def create_environment() -> gym.Env:
+def create_environment(render_mode: str = "human") -> gymnasium.Env:
     """
     Creates the Tetris environment with the settings used in this project.
 
     Returns:
         gym.Env: The Tetris environment.
     """
-    env = gym_tetris.TetrisEnv(
-        b_type=False,
-        reward_score=True,
-        reward_lines=False,
-        penalize_height=False,
-    )
-    env = JoypadSpace(env, SIMPLE_MOVEMENT)
+    env = gymnasium.make("ALE/Tetris-v5", render_mode=render_mode)
+    env = GrayScaleObservation(env, keep_dim=True)
+    env = TransformObservation(env, lambda obs: obs.transpose(2, 0, 1).astype('float32') / 255.)
+
     return env
+
+
+if __name__ == '__main__':
+    env = create_environment()
+    observation, info = env.reset()
+
+    terminated = False
+    while not terminated:
+        action = env.action_space.sample()
+        observation, reward, terminated, truncated, info = env.step(action)
+        env.render()
+
+    env.close()

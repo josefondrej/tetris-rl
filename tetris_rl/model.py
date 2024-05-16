@@ -1,100 +1,55 @@
-import equinox as eqx  # Correct import for Equinox
+import equinox as eqx
 import jax
 import jax.numpy as jnp
-import numpy as np
+from equinox import Module
+from jax import Array
+from jaxtyping import Float
+
+from tetris_rl.environment import create_environment
 
 
-class Flatten(eqx.Module):
+# TODO: The model has static dimensions. Try to make it more flexible.
+class Model(Module):
     """
-    Flattens the input tensor.
-    """
-
-    def __call__(self, x: jnp.ndarray) -> jnp.ndarray:
-        return jnp.reshape(x, (-1))
-
-
-class Relu(eqx.Module):
-    """
-    Rectified Linear Unit activation function.
-    """
-
-    def __call__(self, x: jnp.ndarray) -> jnp.ndarray:
-        return jnp.maximum(x, 0)
-
-
-class DeepQNetwork(eqx.Module):
-    """
-    Gets the state of the game and returns the Q-values for each action.
-
-    Args:
-        state_shape: The shape of the state of the game (height, width, channels).
-        num_actions: The number of actions the agent can take.
+    Model that given an observation of shape `obs_shape` (channels come first)
+    returns the `num_actions` Q-values for each action.
     """
     layers: list
 
-    def __init__(self, state_shape: tuple[int, int, int], num_actions: int, key):
-        key_conv_1, key_conv_2, key_conv_3, key_fc, key_output = jax.random.split(key, 5)
+    def __init__(self, key):
+        key1, key2, key3, key4, key5 = jax.random.split(key, 5)
         self.layers = [
-            eqx.nn.Conv2d(
-                in_channels=state_shape[2],
-                out_channels=32,
-                kernel_size=(8, 8),
-                stride=(4, 4),
-                padding="VALID",
-                key=key_conv_1
-            ),
-            Relu(),
-            eqx.nn.Conv2d(
-                in_channels=32,
-                out_channels=64,
-                kernel_size=(4, 4),
-                stride=(2, 2),
-                padding="VALID",
-                key=key_conv_2
-            ),
-            Relu(),
-            eqx.nn.Conv2d(
-                in_channels=64,
-                out_channels=64,
-                kernel_size=(3, 3),
-                stride=(1, 1),
-                padding="VALID",
-                key=key_conv_3
-            ),
-            Relu(),
-            Flatten(),
-            eqx.nn.Linear(
-                in_features=46592,  # TODO: Calculate this from the state_shape
-                out_features=512,
-                key=key_fc
-            ),
-            Relu(),
-            eqx.nn.Linear(
-                in_features=512,
-                out_features=num_actions,
-                key=key_output
-            ),
-            Relu()
+            eqx.nn.Conv2d(1, 8, stride=4, kernel_size=8, key=key1),
+            eqx.nn.MaxPool2d(kernel_size=4),
+            jax.nn.relu,
+            eqx.nn.Conv2d(8, 4, stride=2, kernel_size=4, key=key2),
+            eqx.nn.MaxPool2d(kernel_size=2),
+            jax.nn.relu,
+            eqx.nn.Conv2d(4, 2, stride=2, kernel_size=2, key=key3),
+            eqx.nn.MaxPool2d(kernel_size=2),
+            jax.nn.relu,
+            jnp.ravel,
+            eqx.nn.Linear(140, 32, key=key4),
+            jax.nn.relu,
+            eqx.nn.Linear(32, 5, key=key5),
+            jax.nn.relu
         ]
 
-    @jax.jit
-    def __call__(self, state: jnp.ndarray) -> jnp.ndarray:
-        """
-        Forward pass of the DeepQNetwork.
-
-        Args:
-            state: The state of the game.
-
-        Returns:
-            The Q-values for each action.
-        """
-        x = state / 255.0
-        x = np.transpose(x, (2, 0, 1))  # JAX expects channel-first format
+    def __call__(self, x: Float[Array, "1 210 160"]) -> Float[Array, "5"]:
         for layer in self.layers:
             x = layer(x)
         return x
 
 
 if __name__ == '__main__':
-    key = jax.random.PRNGKey(0)
-    model = DeepQNetwork(state_shape=(240, 253, 3), num_actions=6, key=key)
+    env = create_environment()
+    print(f"Num actions: {env.action_space.n}")
+    print(f"Observation space: {env.observation_space.shape}")
+
+    model = Model(key=jax.random.PRNGKey(0))
+
+    state, info = env.reset()
+    Q = model(state)
+    print(Q)
+
+    params, static = eqx.partition(model, eqx.is_array)

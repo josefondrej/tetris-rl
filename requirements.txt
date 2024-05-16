@@ -1,6 +1,6 @@
-gym-tetris
-nes-py
+gymnasium[atari]
 jax
 jaxlib
 equinox
 tqdm
+opencv-python
