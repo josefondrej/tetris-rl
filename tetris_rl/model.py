@@ -8,7 +8,8 @@ from jaxtyping import Float
 from tetris_rl.environment import create_environment
 
 
-# TODO: The model has static dimensions. Try to make it more flexible.
+# TODO: The model has static dimensions. Try to calculate the first Linear layer input size from the
+#    observation space shape.
 class Model(Module):
     """
     Model that given an observation of shape `obs_shape` (channels come first)
